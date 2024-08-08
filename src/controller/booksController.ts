@@ -24,7 +24,7 @@ export const getUniqueBook = async (
 }
 
 const purchase = async (id: number) => {
-    const book = mockData.find((book) => book.id === +req.params.id)
+    const book = mockData.find((book) => book.id === +id)
 
     if (!book) throw new ErrorHandler('Book not found', 404)
 
