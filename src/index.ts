@@ -10,6 +10,10 @@ const port = 8000
 app.use(express.json())
 app.use(cors())
 
+app.get('/*', (req, res) => {
+    res.send('Hello World!')
+})
+
 app.use('/books', booksRouter)
 
 app.use((_req, _res, next) => {
