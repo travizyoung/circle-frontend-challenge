@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express'
-import prisma from '../db/client'
+// import prisma from '../db/client'
+import mockData from '../../mocks/mockData'
 import ErrorHandler from '../utils/ErrorHandler'
 
 export const getAllBooks = async (_: Request, res: Response) => {
-    const books = await prisma.book.findMany()
-    return res.status(200).json({ books })
+    // const books = await prisma.book.findMany()
+    return res.status(200).json({ books: mockData })
 }
 
 export const getUniqueBook = async (
@@ -12,9 +13,7 @@ export const getUniqueBook = async (
     res: Response,
     _next: NextFunction
 ) => {
-    const book = await prisma.book.findUnique({
-        where: { id: +req.params.id },
-    })
+    const book = mockData.find((book) => book.id === +req.params.id)
 
     if (!book) throw new ErrorHandler('Book not found', 404)
 
@@ -25,29 +24,18 @@ export const getUniqueBook = async (
 }
 
 const purchase = async (id: number) => {
-    return await prisma.$transaction(async (tx) => {
-        try {
-            const book = await tx.book.update({
-                where: { id },
-                data: { availableStock: { decrement: 1 } },
-            })
+    const book = mockData.find((book) => book.id === +req.params.id)
 
-            if (book.availableStock < 0) {
-                throw new Error(
-                    `Book '${book.title}' is currently out of stock`
-                )
-            }
-            return book
-        } catch (err) {
-            if (err instanceof Error) {
-                if (/record to update not found/i.test(err.message)) {
-                    throw new ErrorHandler('Book not found', 404)
-                } else {
-                    throw err
-                }
-            }
-        }
-    })
+    if (!book) throw new ErrorHandler('Book not found', 404)
+
+    if (book.availableStock < 1) {
+        throw new ErrorHandler(
+            `Book '${book.title}' is currently out of stock`,
+            400
+        )
+    }
+
+    book.availableStock -= 1
 }
 
 export const purchaseBook = async (req: Request, res: Response) => {
